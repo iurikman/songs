@@ -12,7 +12,7 @@ type Song struct {
 	Deleted     bool      `json:"deleted"`
 }
 
-type SongDetail struct {
+type SongDetails struct {
 	ReleaseDate string `json:"releaseDate"`
 	Text        string `json:"text"`
 	Link        string `json:"link"`

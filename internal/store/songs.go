@@ -4,10 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/iurikman/songs/internal/models"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 func (p *Postgres) CreateSong(ctx context.Context, song models.Song) (*models.Song, error) {
@@ -38,7 +41,14 @@ func (p *Postgres) CreateSong(ctx context.Context, song models.Song) (*models.So
 		&createdSong.Deleted,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("creating song err: %w", err)
+		var pgErr *pgconn.PgError
+
+		switch {
+		case errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation:
+			return nil, models.ErrDuplicateSong
+		case err != nil:
+			return nil, fmt.Errorf("creating song err: %w", err)
+		}
 	}
 
 	return createdSong, nil
@@ -93,7 +103,7 @@ func (p *Postgres) GetSongs(ctx context.Context, params models.Params) ([]*model
 	return songs, nil
 }
 
-func (p *Postgres) GetText(ctx context.Context, id uuid.UUID) (*string, error) {
+func (p *Postgres) GetText(ctx context.Context, id uuid.UUID, verse int) (*string, error) {
 	text := ""
 
 	query := `
@@ -107,7 +117,15 @@ func (p *Postgres) GetText(ctx context.Context, id uuid.UUID) (*string, error) {
 		return nil, fmt.Errorf("p.db.QueryRow(ctx, query, id).Scan(&text) err: %w", err)
 	}
 
-	return &text, nil
+	splittedText := strings.Split(text, "\n\n")
+
+	if verse < 1 || verse > len(splittedText) {
+		return nil, models.ErrVerseIsNotValid
+	}
+
+	textOfVerse := splittedText[verse-1]
+
+	return &textOfVerse, nil
 }
 
 func (p *Postgres) DeleteSong(ctx context.Context, id uuid.UUID) error {

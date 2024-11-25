@@ -39,12 +39,14 @@ func New(ctx context.Context, cfg Config) (*Postgres, error) {
 
 	dsn := urlScheme.String()
 
+	log.Infof("Connecting to database with DSN: %s", dsn)
+
 	db, err := pgxpool.New(ctx, dsn)
 	if err != nil {
 		return nil, fmt.Errorf("pgxpool.New(ctx, dsn) err: %w", err)
 	}
 
-	log.Info("successfully connected to database")
+	log.Info("Successfully connected to database")
 
 	return &Postgres{
 		db:  db,
@@ -53,6 +55,8 @@ func New(ctx context.Context, cfg Config) (*Postgres, error) {
 }
 
 func (p *Postgres) Migrate(direction migrate.MigrationDirection) error {
+	log.Infof("Running migrations in direction: %v", direction)
+
 	conn, err := sql.Open("pgx", p.dsn)
 	if err != nil {
 		return fmt.Errorf("sql.Open: %w", err)

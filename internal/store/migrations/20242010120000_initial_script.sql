@@ -7,7 +7,9 @@ CREATE table songs (
     music_group varchar not null,
     text varchar,
     link  varchar,
-    deleted bool
+    deleted bool,
+
+    CONSTRAINT unique_song UNIQUE (release_date, name, music_group)
 );
 
 -- +migrate Down
