@@ -9,10 +9,19 @@ type Song struct {
 	Group       string    `json:"musicGroup"`
 	Text        string    `json:"text"`
 	Link        string    `json:"link"`
+	Deleted     bool      `json:"deleted"`
 }
 
 type SongDetail struct {
 	ReleaseDate string `json:"releaseDate"`
 	Text        string `json:"text"`
 	Link        string `json:"link"`
+}
+
+type Params struct {
+	Offset     int    `schema:"offset"`
+	Limit      int    `schema:"limit"`
+	Sorting    string `schema:"sorting"`
+	Descending bool   `schema:"descending"`
+	Filter     string `schema:"filter"`
 }

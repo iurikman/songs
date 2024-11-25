@@ -32,10 +32,10 @@ func NewServer(cfg SrvConfig, svc service) (*Server, error) {
 	router := chi.NewRouter()
 
 	srv := &http.Server{
-		Addr:           cfg.BindAddr,
-		Handler:        router,
-		ReadTimeout:    readHeaderTimeout,
-		MaxHeaderBytes: maxHeaderBytes,
+		Addr:              cfg.BindAddr,
+		Handler:           router,
+		ReadHeaderTimeout: readHeaderTimeout,
+		MaxHeaderBytes:    maxHeaderBytes,
 	}
 
 	return &Server{
@@ -46,13 +46,14 @@ func NewServer(cfg SrvConfig, svc service) (*Server, error) {
 	}, nil
 }
 
+//nolint:contextcheck
 func (s *Server) Start(ctx context.Context) error {
 	s.configRouter()
 
 	go func() {
 		<-ctx.Done()
 
-		ctxWithTimeout, cancel := context.WithTimeout(ctx, gracefulShutdownTimeout)
+		ctxWithTimeout, cancel := context.WithTimeout(context.Background(), gracefulShutdownTimeout)
 		defer cancel()
 
 		if err := s.server.Shutdown(ctxWithTimeout); err != nil {
@@ -73,6 +74,10 @@ func (s *Server) configRouter() {
 		r.Route("/v1", func(r chi.Router) {
 			r.Route("/songs", func(r chi.Router) {
 				r.Post("/", s.createSong)
+				r.Get("/", s.getSongs)
+				r.Get("/{id}", s.getText)
+				r.Patch("/{id}", s.updateSong)
+				r.Delete("/{id}", s.deleteSong)
 			})
 		})
 	})
