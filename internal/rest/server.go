@@ -38,6 +38,8 @@ func NewServer(cfg SrvConfig, svc service) (*Server, error) {
 		MaxHeaderBytes:    maxHeaderBytes,
 	}
 
+	log.Debug("Initializing server")
+
 	return &Server{
 		config: cfg,
 		router: router,
@@ -48,7 +50,10 @@ func NewServer(cfg SrvConfig, svc service) (*Server, error) {
 
 //nolint:contextcheck
 func (s *Server) Start(ctx context.Context) error {
+	log.Debug("Configuring router")
 	s.configRouter()
+
+	log.Debug("Starting server at", s.config.BindAddr)
 
 	go func() {
 		<-ctx.Done()
@@ -81,4 +86,6 @@ func (s *Server) configRouter() {
 			})
 		})
 	})
+
+	log.Debug("Router configured with routes")
 }

@@ -2,6 +2,7 @@ package tests
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -48,6 +49,19 @@ func (s *IntegrationTestSuite) TestSongs() {
 			)
 			s.Require().Equal(http.StatusBadRequest, resp.StatusCode)
 		})
+
+		s.Run("204/statusCreated", func() {
+			createdSong := new(models.Song)
+
+			resp := s.sendRequest(
+				context.Background(),
+				http.MethodPost,
+				"/",
+				testSong1,
+				&server.HTTPResponse{Data: &createdSong},
+			)
+			s.Require().Equal(http.StatusConflict, resp.StatusCode)
+		})
 	})
 
 	testID2 := uuid.New()
@@ -55,7 +69,6 @@ func (s *IntegrationTestSuite) TestSongs() {
 	testID4 := uuid.New()
 	testID5 := uuid.New()
 	s.Run("GET", func() {
-
 		testSong2 := models.Song{
 			ID:    testID2,
 			Name:  "testSong2",
@@ -64,20 +77,20 @@ func (s *IntegrationTestSuite) TestSongs() {
 
 		testSong3 := models.Song{
 			ID:    testID3,
-			Name:  "testSong2",
-			Group: "testGroup2",
+			Name:  "testSong3",
+			Group: "testGroup3",
 		}
 
 		testSong4 := models.Song{
 			ID:    testID4,
-			Name:  "testSong2",
-			Group: "testGroup2",
+			Name:  "testSong4",
+			Group: "testGroup4",
 		}
 
 		testSong5 := models.Song{
 			ID:    testID5,
-			Name:  "testSong2",
-			Group: "testGroup2",
+			Name:  "testSong5",
+			Group: "testGroup5",
 		}
 
 		s.postTestSong(&testSong2)
@@ -113,17 +126,17 @@ func (s *IntegrationTestSuite) TestSongs() {
 					&server.HTTPResponse{Data: &songs})
 				s.Require().Equal(http.StatusOK, resp.StatusCode)
 				s.Require().Equal(2, len(songs))
-				s.Require().Equal(testSong2.ID, songs[0].ID)
-				s.Require().Equal(testSong2.Name, songs[0].Name)
-				s.Require().Equal(testSong2.Group, songs[0].Group)
+				s.Require().Equal(testSong5.ID, songs[0].ID)
+				s.Require().Equal(testSong5.Name, songs[0].Name)
+				s.Require().Equal(testSong5.Group, songs[0].Group)
 			})
 		})
 
 		s.Run("text", func() {
-			s.Run("200/statusOK/verse = 1", func() {
+			s.Run("200/statusOK/offset = 1", func() {
 				text := ""
 
-				verse := "?verse=1"
+				verse := "?offset=1"
 
 				resp := s.sendRequest(
 					context.Background(),
@@ -132,10 +145,11 @@ func (s *IntegrationTestSuite) TestSongs() {
 					nil,
 					&server.HTTPResponse{Data: &text},
 				)
+				fmt.Print(text)
 				s.Require().Equal(http.StatusOK, resp.StatusCode)
 			})
 
-			s.Run("400/StatusBadRequest/verse = 0", func() {
+			s.Run("400/StatusBadRequest/offset = 0", func() {
 				text := ""
 
 				verse := "?verse=0"

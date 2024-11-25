@@ -5,14 +5,17 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
+	"github.com/iurikman/songs/internal/config"
+	"github.com/iurikman/songs/internal/models"
 	"github.com/iurikman/songs/internal/rest"
 	"github.com/iurikman/songs/internal/service"
+	"github.com/iurikman/songs/internal/songdetails"
 	"github.com/iurikman/songs/internal/store"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/joho/godotenv"
 	migrate "github.com/rubenv/sql-migrate"
 	"github.com/stretchr/testify/suite"
 )
@@ -21,10 +24,11 @@ const bindAddress = "http://localhost:8080/api/v1/songs"
 
 type IntegrationTestSuite struct {
 	suite.Suite
-	cancel  context.CancelFunc
-	store   *store.Postgres
-	service *service.Service
-	server  *rest.Server
+	cancel     context.CancelFunc
+	store      *store.Postgres
+	service    *service.Service
+	server     *rest.Server
+	mockserver *httptest.Server
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
@@ -35,14 +39,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	ctx, cancel := context.WithCancel(context.Background())
 	s.cancel = cancel
 
-	err := godotenv.Load(".env")
+	cfg := config.NewConfig()
 
 	db, err := store.New(ctx, store.Config{
-		PGUser:     os.Getenv("POSTGRES_USER"),
-		PGPassword: os.Getenv("POSTGRES_PASSWORD"),
-		PGHost:     os.Getenv("POSTGRES_HOST"),
-		PGPort:     os.Getenv("POSTGRES_PORT"),
-		PGDatabase: os.Getenv("POSTGRES_DATABASE"),
+		PGUser:     cfg.PostgresUser,
+		PGPassword: cfg.PostgresPassword,
+		PGHost:     cfg.PostgresHost,
+		PGPort:     cfg.PostgresPort,
+		PGDatabase: cfg.PostgresDatabase,
 	})
 	s.Require().NoError(err)
 
@@ -54,7 +58,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	err = s.store.Truncate(ctx, "songs")
 	s.Require().NoError(err)
 
-	s.service = service.NewService(db)
+	s.mockserver = httptest.NewServer(http.HandlerFunc(handler))
+
+	songDetails := songdetails.NewSongDetails(s.mockserver.URL)
+
+	s.service = service.NewService(db, songDetails)
 
 	s.server, err = rest.NewServer(rest.SrvConfig{BindAddr: os.Getenv("BIND_ADDRESS")}, s.service)
 	s.Require().NoError(err)
@@ -94,4 +102,36 @@ func (s *IntegrationTestSuite) sendRequest(ctx context.Context, method, endpoint
 	}
 
 	return resp
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	group := r.URL.Query().Get("group")
+	song := r.URL.Query().Get("song")
+
+	if group == "" || song == "" {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	// Симуляция данных для примера
+	detail := models.SongDetails{
+		ReleaseDate: "16.07.2006",
+		Text: `Ooh baby, don't you know I suffer?
+Ooh baby, can you hear me moan?
+You caught me under false pretenses
+How long before you let me go?
+
+Ooh
+You set my soul alight
+Ooh
+You set my soul alight`,
+		Link: "https://www.youtube.com/watch?v=Xsp3_a-PMTw",
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err := json.NewEncoder(w).Encode(detail)
+	if err != nil {
+		return
+	}
 }
