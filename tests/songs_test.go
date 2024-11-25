@@ -55,7 +55,6 @@ func (s *IntegrationTestSuite) TestSongs() {
 	testID4 := uuid.New()
 	testID5 := uuid.New()
 	s.Run("GET", func() {
-
 		testSong2 := models.Song{
 			ID:    testID2,
 			Name:  "testSong2",
