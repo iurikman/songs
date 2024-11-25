@@ -95,3 +95,14 @@ func (p *Postgres) Migrate(direction migrate.MigrationDirection) error {
 
 	return nil
 }
+
+func (p *Postgres) Truncate(ctx context.Context, tables ...string) error {
+	for _, table := range tables {
+		_, err := p.db.Exec(ctx, "DELETE FROM"+" "+table)
+		if err != nil {
+			return fmt.Errorf("truncate: %w", err)
+		}
+	}
+
+	return nil
+}
