@@ -1,0 +1,207 @@
+basePath: /api/v1
+definitions:
+  models.Song:
+    properties:
+      deleted:
+        type: boolean
+      id:
+        type: string
+      link:
+        type: string
+      musicGroup:
+        type: string
+      name:
+        type: string
+      releaseDate:
+        type: string
+      text:
+        type: string
+    type: object
+  rest.HTTPResponse:
+    properties:
+      data: {}
+      error:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    name: Iurikman
+  description: API for managing songs
+  title: Songs API
+  version: "1.0"
+paths:
+  /songs:
+    get:
+      description: Retrieve a list of songs based on filter and sorting parameters
+      parameters:
+      - description: Filter by song name
+        in: query
+        name: filter
+        type: string
+      - description: Sort by field (e.g., name)
+        in: query
+        name: sorting
+        type: string
+      - description: Sort in descending order
+        in: query
+        name: descending
+        type: boolean
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      - description: Limit number of songs
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Song'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPResponse'
+      summary: Get list of songs
+      tags:
+      - songs
+    post:
+      consumes:
+      - application/json
+      description: Create a new song with the provided details
+      parameters:
+      - description: Song Data
+        in: body
+        name: song
+        required: true
+        schema:
+          $ref: '#/definitions/models.Song'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Song'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/rest.HTTPResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPResponse'
+      summary: Create a new song
+      tags:
+      - songs
+  /songs/{id}:
+    delete:
+      description: Mark a song as deleted by its ID
+      parameters:
+      - description: Song ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPResponse'
+      summary: Delete a song
+      tags:
+      - songs
+    get:
+      description: Retrieve the text of a song by ID and verse
+      parameters:
+      - description: Song ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Verse offset
+        in: query
+        name: offset
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Song text
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.HTTPResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPResponse'
+      summary: Get song text
+      tags:
+      - songs
+    put:
+      consumes:
+      - application/json
+      description: Update details of a song by ID
+      parameters:
+      - description: Song ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Song Data
+        in: body
+        name: song
+        required: true
+        schema:
+          $ref: '#/definitions/models.Song'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Song'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/rest.HTTPResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.HTTPResponse'
+      summary: Update a song
+      tags:
+      - songs
+swagger: "2.0"

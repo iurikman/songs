@@ -1,4 +1,4 @@
--- migrate Up
+-- +migrate Up
 
 CREATE table songs (
     id uuid primary key,
@@ -6,9 +6,12 @@ CREATE table songs (
     name varchar not null,
     music_group varchar not null,
     text varchar,
-    link  varchar
+    link  varchar,
+    deleted bool,
+
+    CONSTRAINT unique_song UNIQUE (release_date, name, music_group)
 );
 
--- migrate Down
+-- +migrate Down
 
 DROP TABLE songs;
