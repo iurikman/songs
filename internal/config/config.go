@@ -1,31 +1,43 @@
 package config
 
 import (
-	"fmt"
+	"os"
 
-	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 )
 
 type Config struct {
-	BindAddress string `env:"BIND_ADDRESS" env-default:":8080"`
+	BindAddress string
 
-	PostgresHost     string `env:"POSTGRES_HOST" env-default:"localhost"`
-	PostgresPort     string `env:"POSTGRES_PORT" env-default:"5432"`
-	PostgresDatabase string `env:"POSTGRES_DATABASE" env-default:"postgres"`
-	PostgresUser     string `env:"POSTGRES_USER" env-default:"admin"`
-	PostgresPassword string `env:"POSTGRES_PASSWORD" env-default:"admin"`
+	PostgresHost     string
+	PostgresPort     string
+	PostgresDatabase string
+	PostgresUser     string
+	PostgresPassword string
 
-	APIURL string `env:"API_URL" env-default:"http://localhost:8080"`
+	APIUrl  string
+	APIPort string
 }
 
 func NewConfig() Config {
-	config := Config{}
-	if err := cleanenv.ReadEnv(&config); err != nil {
-		panic(fmt.Errorf("error reading config: %w", err))
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Panicf("Error loading .env file")
 	}
 
-	log.Infof("config loaded %+v", config)
+	log.Debug("environment variables loaded")
+
+	config := Config{
+		BindAddress:      os.Getenv("BIND_ADDRESS"),
+		PostgresHost:     os.Getenv("POSTGRES_HOST"),
+		PostgresPort:     os.Getenv("POSTGRES_PORT"),
+		PostgresDatabase: os.Getenv("POSTGRES_DATABASE"),
+		PostgresUser:     os.Getenv("POSTGRES_USER"),
+		PostgresPassword: os.Getenv("POSTGRES_PASSWORD"),
+		APIUrl:           os.Getenv("API_URL"),
+		APIPort:          os.Getenv("API_PORT"),
+	}
 
 	return config
 }
